@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+}
+
+enum RiskCategory {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum SimulationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CONVERTED
+}
+
+model User {
+  id       String   @id @default(uuid())
+  email    String   @unique
+  password String // Bcrypt hashed
+  name     String
+  role     UserRole @default(OPERATOR)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  simulations Simulation[]
+
+  @@index([email])
+}
+
+model Customer {
+  id           String  @id @default(uuid())
+  name         String
+  cpf          String  @unique
+  email        String
+  phone        String?
+  interestRate Decimal @db.Decimal(5, 2) // Annual rate (e.g.,12.50%)
+
+  // Financial Profile
+  creditScore   Int? // 0-1000, nullable until assessed
+  monthlyIncome Decimal?      @db.Decimal(12, 2)
+  riskCategory  RiskCategory?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  simulations Simulation[]
+
+  @@index([cpf])
+  @@index([email])
+}
+
+model Simulation {
+  id String @id @default(uuid())
+
+  // Relationships
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  // Input Parameters
+  requestedAmount Decimal @db.Decimal(12, 2)
+  installments    Int
+  interestRate    Decimal @db.Decimal(5, 2) // Snapshot from customer
+
+  // Calculated Results (stored for historical accuracy)
+  installmentValue Decimal @db.Decimal(12, 2)
+  totalAmount      Decimal @db.Decimal(12, 2)
+  totalInterest    Decimal @db.Decimal(12, 2)
+
+  // Status Tracking
+  status SimulationStatus @default(PENDING)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Relations
+  schedule InstallmentSchedule[]
+
+  @@index([customerId])
+  @@index([createdById])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model InstallmentSchedule {
+  id           String     @id @default(uuid())
+  simulationId String
+  simulation   Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+
+  installmentNumber Int
+  dueDate           DateTime
+  principal         Decimal  @db.Decimal(12, 2)
+  interest          Decimal  @db.Decimal(12, 2)
+  total             Decimal  @db.Decimal(12, 2)
+  balance           Decimal  @db.Decimal(12, 2)
+
+  @@unique([simulationId, installmentNumber])
+  @@index([simulationId])
+}
