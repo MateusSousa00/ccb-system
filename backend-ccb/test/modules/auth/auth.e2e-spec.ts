@@ -3,7 +3,6 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../../../src/app.module';
 import { PrismaService } from '../../../src/database/prisma/prisma.service';
-import { setupApp } from '../../setup-app';
 
 describe('Auth (e2e)', () => {
   let app: INestApplication;
@@ -15,9 +14,11 @@ describe('Auth (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    setupApp(app);
 
     prisma = app.get<PrismaService>(PrismaService);
+
+    await prisma.user.deleteMany();
+    await prisma.customer.deleteMany();
 
     await app.init();
   });

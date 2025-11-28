@@ -5,6 +5,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { JwtGuard } from './common/guards/jwt/jwt.guard';
+import { RolesGuard } from './common/guards/roles/roles.guard';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { PrismaModule } from './database/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -35,6 +36,10 @@ import { SimulationsModule } from './modules/simulations/simulations.module';
     {
       provide: APP_GUARD,
       useClass: JwtGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     },
     {
       provide: APP_FILTER,
