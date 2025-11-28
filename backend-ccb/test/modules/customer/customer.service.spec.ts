@@ -5,7 +5,7 @@ import { PrismaService } from '../../../src/database/prisma/prisma.service';
 import { CreateCustomerDto } from '../../../src/modules/customer/dto/create-customer.dto';
 import { QueryCustomerDto } from '../../../src/modules/customer/dto/query-customer.dto';
 import { UpdateCustomerDto } from '../../../src/modules/customer/dto/update-customer.dto';
-import { CustomerService } from '../../../src/modules/customer/service/customer.service';
+import { CustomerService } from '../../../src/modules/customer/services/customer.service';
 
 describe('CustomerService', () => {
   let service: CustomerService;

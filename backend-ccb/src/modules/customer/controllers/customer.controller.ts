@@ -12,7 +12,7 @@ import { Roles } from '../../../common/decorators/roles/roles.decorator';
 import { CreateCustomerDto } from '../dto/create-customer.dto';
 import { QueryCustomerDto } from '../dto/query-customer.dto';
 import { UpdateCustomerDto } from '../dto/update-customer.dto';
-import { CustomerService } from '../service/customer.service';
+import { CustomerService } from '../services/customer.service';
 
 @Controller('customer')
 export class CustomerController {
