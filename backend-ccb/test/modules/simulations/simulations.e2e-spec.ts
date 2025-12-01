@@ -22,13 +22,12 @@ describe('Simulations (e2e)', () => {
 
     await app.init();
 
-    // Limpar banco
     await prisma.installmentSchedule.deleteMany();
     await prisma.simulation.deleteMany();
     await prisma.customer.deleteMany();
     await prisma.user.deleteMany();
 
-    // Criar ADMIN
+    // Create Admin
     await request(app.getHttpServer()).post('/auth/register').send({
       email: 'admin@test.com',
       password: 'password123',
@@ -48,7 +47,7 @@ describe('Simulations (e2e)', () => {
     }
     adminToken = adminLoginRes.body.data.accessToken;
 
-    // Criar OPERATOR
+    // Create OPERATOR
     await request(app.getHttpServer()).post('/auth/register').send({
       email: 'operator@test.com',
       password: 'password123',
@@ -68,7 +67,7 @@ describe('Simulations (e2e)', () => {
     }
     operatorToken = operatorLoginRes.body.data.accessToken;
 
-    // Criar um customer para usar nos testes
+    // Create Customer
     const customerRes = await request(app.getHttpServer())
       .post('/customer')
       .set('Authorization', `Bearer ${adminToken}`)
@@ -91,20 +90,18 @@ describe('Simulations (e2e)', () => {
   });
 
   beforeEach(async () => {
-    // Limpar apenas simulações entre testes (manter users e customer)
     await prisma.installmentSchedule.deleteMany();
     await prisma.simulation.deleteMany();
   });
 
   describe('/simulations (POST)', () => {
     const validSimulation = {
-      customerId: '', // Será preenchido no teste
+      customerId: '',
       requestedAmount: 10000,
       installments: 12,
     };
 
     it('should create simulation as ADMIN', async () => {
-      //todo espero number veio string
       return await request(app.getHttpServer())
         .post('/simulations')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -113,9 +110,9 @@ describe('Simulations (e2e)', () => {
         .expect((res) => {
           expect(res.body.success).toBe(true);
           expect(res.body.data).toHaveProperty('simulation');
-          expect(res.body.data.simulation.requestedAmount).toBe(10000);
-          expect(res.body.data.simulation.installments).toBe(12);
-          expect(res.body.data.simulation.interestRate).toBe(12.5); // Taxa do customer
+          expect(Number(res.body.data.simulation.requestedAmount)).toBe(10000);
+          expect(Number(res.body.data.simulation.installments)).toBe(12);
+          expect(Number(res.body.data.simulation.interestRate)).toBe(12.5);
           expect(res.body.data.simulation.status).toBe('PENDING');
           expect(res.body.data.simulation).toHaveProperty('installmentValue');
           expect(res.body.data.simulation).toHaveProperty('totalAmount');
@@ -139,11 +136,11 @@ describe('Simulations (e2e)', () => {
     });
 
     it('should fail with non-existent customer', async () => {
-      //todo expect 404 not found receive 400 bad req
+      const nonExistentUuid = '00000000-0000-0000-0000-000000000000';
       return await request(app.getHttpServer())
         .post('/simulations')
         .set('Authorization', `Bearer ${adminToken}`)
-        .send({ ...validSimulation, customerId: 'non-existent-id' })
+        .send({ ...validSimulation, customerId: nonExistentUuid })
         .expect(404)
         .expect((res) => {
           expect(res.body.message).toBe('Customer not found');
@@ -151,13 +148,12 @@ describe('Simulations (e2e)', () => {
     });
 
     it('should fail with amount below minimum', async () => {
-      //todo expect: Minimum loan amount is R$100 received: requestedAmount must not be less than 100
       return await request(app.getHttpServer())
         .post('/simulations')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           customerId,
-          requestedAmount: 50, // Abaixo de R$ 100
+          requestedAmount: 50,
           installments: 12,
         })
         .expect(400)
@@ -191,14 +187,12 @@ describe('Simulations (e2e)', () => {
     });
 
     it('should use customer interest rate', async () => {
-      //todo recebi string espero number
       const res = await request(app.getHttpServer())
         .post('/simulations')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({ ...validSimulation, customerId });
 
-      // Verifica que usou a taxa de 12.5% do customer
-      expect(res.body.data.simulation.interestRate).toBe(12.5);
+      expect(Number(res.body.data.simulation.interestRate)).toBe(12.5);
     });
 
     it('should create installment schedule automatically', async () => {
@@ -209,12 +203,11 @@ describe('Simulations (e2e)', () => {
 
       const simulationId = res.body.data.simulation.id;
 
-      // Verificar que cronograma foi criado
       const schedule = await prisma.installmentSchedule.findMany({
         where: { simulationId },
       });
 
-      expect(schedule).toHaveLength(12); // 12 parcelas
+      expect(schedule).toHaveLength(12);
       expect(schedule[0].installmentNumber).toBe(1);
       expect(schedule[11].installmentNumber).toBe(12);
     });
@@ -222,8 +215,6 @@ describe('Simulations (e2e)', () => {
 
   describe('/simulations (GET)', () => {
     beforeEach(async () => {
-      // problema acima, ta dando timeout
-      // Criar algumas simulações para testar listagem
       await request(app.getHttpServer())
         .post('/simulations')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -258,7 +249,6 @@ describe('Simulations (e2e)', () => {
     });
 
     it('should filter by customerId', async () => {
-      //todo
       return await request(app.getHttpServer())
         .get(`/simulations?customerId=${customerId}`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -272,7 +262,6 @@ describe('Simulations (e2e)', () => {
     });
 
     it('should filter by status', async () => {
-      //todo
       return await request(app.getHttpServer())
         .get('/simulations?status=PENDING')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -286,7 +275,6 @@ describe('Simulations (e2e)', () => {
     });
 
     it('should return empty array for non-existent status', async () => {
-      //todo
       return await request(app.getHttpServer())
         .get('/simulations?status=CONVERTED')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -366,7 +354,6 @@ describe('Simulations (e2e)', () => {
           expect(res.body.data).toHaveProperty('schedule');
           expect(res.body.data.schedule).toHaveLength(12);
 
-          // Verificar estrutura de uma parcela
           const firstInstallment = res.body.data.schedule[0];
           expect(firstInstallment).toHaveProperty('installmentNumber', 1);
           expect(firstInstallment).toHaveProperty('dueDate');
@@ -378,18 +365,15 @@ describe('Simulations (e2e)', () => {
     });
 
     it('should have decreasing balance in schedule', async () => {
-      //todo
       const res = await request(app.getHttpServer())
         .get(`/simulations/${simulationId}/schedule`)
         .set('Authorization', `Bearer ${adminToken}`);
 
       const schedule = res.body.data.schedule;
 
-      // Primeira parcela tem maior saldo
-      expect(schedule[0].balance).toBeGreaterThan(schedule[11].balance);
+      expect(Number(schedule[0].balance)).toBeGreaterThan(Number(schedule[11].balance));
 
-      // Última parcela tem saldo zero (ou próximo)
-      expect(schedule[11].balance).toBeLessThan(10); // Margem de arredondamento
+      expect(Number(schedule[11].balance)).toBeLessThan(10);
     });
   });
 
@@ -478,7 +462,6 @@ describe('Simulations (e2e)', () => {
           expect(res.body.data.message).toBe('Simulation deleted successfully');
         });
 
-      // Verificar que foi deletado
       await request(app.getHttpServer())
         .get(`/simulations/${simulationId}`)
         .set('Authorization', `Bearer ${adminToken}`)
@@ -486,19 +469,16 @@ describe('Simulations (e2e)', () => {
     });
 
     it('should delete installment schedule on cascade', async () => {
-      // Verificar que cronograma existe
       const scheduleBefore = await prisma.installmentSchedule.findMany({
         where: { simulationId },
       });
       expect(scheduleBefore).toHaveLength(12);
 
-      // Deletar simulação
       await request(app.getHttpServer())
         .delete(`/simulations/${simulationId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(200);
 
-      // Verificar que cronograma foi deletado (cascade)
       const scheduleAfter = await prisma.installmentSchedule.findMany({
         where: { simulationId },
       });

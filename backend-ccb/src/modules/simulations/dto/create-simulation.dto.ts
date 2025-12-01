@@ -7,7 +7,7 @@ export class CreateSimulationDto {
 
   @IsNotEmpty()
   @Transform(({ value }) => parseFloat(value))
-  @Min(100)
+  @Min(100, { message: 'Minimum loan amount is R$ 100' })
   requestedAmount: number;
 
   @IsInt()
