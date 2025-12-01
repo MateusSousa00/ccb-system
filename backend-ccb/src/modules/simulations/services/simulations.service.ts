@@ -10,6 +10,10 @@ import { QuerySimulationDto } from '../dto/query-simulation.dto';
 import { UpdateSimulationDto } from '../dto/update-simulation.dto';
 import { LoanCalculatorService } from './loan-calculator.service';
 
+export type SimulationWithDetails = Prisma.PromiseReturnType<
+  typeof SimulationsService.prototype.findOne
+>;
+
 @Injectable()
 export class SimulationsService {
   constructor(
@@ -164,6 +168,7 @@ export class SimulationsService {
             cpf: true,
             email: true,
             phone: true,
+            interestRate: true,
             creditScore: true,
             monthlyIncome: true,
             riskCategory: true,

@@ -267,6 +267,7 @@ describe('CustomerService', () => {
           {
             id: 'sim-1',
             requestedAmount: 10000,
+            interestRate: 12.5,
             installments: 12,
             status: 'PENDING',
             createdAt: new Date(),
@@ -287,6 +288,7 @@ describe('CustomerService', () => {
             select: {
               id: true,
               requestedAmount: true,
+              interestRate: true,
               installments: true,
               status: true,
               createdAt: true,

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CCB - Cédula de Crédito Bancário</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #333;
+      background: #fff;
+    }
+
+    .container {
+      max-width: 100%;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 3px solid #2c3e50;
+      padding-bottom: 15px;
+    }
+
+    .header h1 {
+      font-size: 24pt;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+
+    .header p {
+      font-size: 10pt;
+      color: #7f8c8d;
+    }
+
+    .doc-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 25px;
+      padding: 15px;
+      background: #ecf0f1;
+      border-radius: 5px;
+    }
+
+    .doc-info div {
+      flex: 1;
+    }
+
+    .doc-info strong {
+      color: #2c3e50;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    .section-title {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .info-item {
+      padding: 10px;
+      background: #f8f9fa;
+      border-left: 4px solid #3498db;
+      border-radius: 3px;
+    }
+
+    .info-item label {
+      font-weight: bold;
+      color: #555;
+      font-size: 9pt;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .info-item span {
+      color: #2c3e50;
+      font-size: 11pt;
+    }
+
+    .financial-summary {
+      background: #e8f5e9;
+      border: 2px solid #4caf50;
+      border-radius: 5px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .financial-summary h3 {
+      color: #2e7d32;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+
+    .summary-item {
+      text-align: center;
+      padding: 10px;
+      background: white;
+      border-radius: 5px;
+    }
+
+    .summary-item label {
+      font-size: 9pt;
+      color: #666;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .summary-item .value {
+      font-size: 16pt;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 9pt;
+    }
+
+    table thead {
+      background: #34495e;
+      color: white;
+    }
+
+    table th,
+    table td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #ddd;
+    }
+
+    table tbody tr:nth-child(even) {
+      background: #f8f9fa;
+    }
+
+    table tbody tr:hover {
+      background: #e3f2fd;
+    }
+
+    table td.number {
+      text-align: right;
+      font-family: 'Courier New', monospace;
+    }
+
+    .footer {
+      margin-top: 50px;
+      padding-top: 20px;
+      border-top: 2px solid #2c3e50;
+    }
+
+    .signature-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 60px;
+    }
+
+    .signature-box {
+      text-align: center;
+    }
+
+    .signature-line {
+      border-top: 2px solid #333;
+      margin-bottom: 10px;
+      padding-top: 10px;
+    }
+
+    .terms {
+      font-size: 9pt;
+      color: #555;
+      line-height: 1.4;
+      margin-top: 30px;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 5px;
+    }
+
+    .terms h4 {
+      color: #2c3e50;
+      margin-bottom: 10px;
+    }
+
+    .terms ul {
+      margin-left: 20px;
+    }
+
+    .terms li {
+      margin-bottom: 5px;
+    }
+
+    .page-break {
+      page-break-after: always;
+    }
+
+    @media print {
+      body {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>CÉDULA DE CRÉDITO BANCÁRIO (CCB)</h1>
+      <p>Documento emitido em conformidade com a Lei nº 10.931/2004</p>
+    </div>
+
+    <!-- Document Info -->
+    <div class="doc-info">
+      <div>
+        <strong>Número da CCB:</strong>
+        <span>{{simulationId}}</span>
+      </div>
+      <div>
+        <strong>Data de Emissão:</strong>
+        <span>{{createdAt}}</span>
+      </div>
+      <div>
+        <strong>Status:</strong>
+        <span>{{status}}</span>
+      </div>
+    </div>
+
+    <!-- Customer Information -->
+    <div class="section">
+      <h2 class="section-title">1. DADOS DO EMITENTE (DEVEDOR)</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Nome Completo:</label>
+          <span>{{customerName}}</span>
+        </div>
+        <div class="info-item">
+          <label>CPF:</label>
+          <span>{{customerCpf}}</span>
+        </div>
+        <div class="info-item">
+          <label>E-mail:</label>
+          <span>{{customerEmail}}</span>
+        </div>
+        <div class="info-item">
+          <label>Telefone:</label>
+          <span>{{customerPhone}}</span>
+        </div>
+        <div class="info-item">
+          <label>Score de Crédito:</label>
+          <span>{{customerCreditScore}}</span>
+        </div>
+        <div class="info-item">
+          <label>Renda Mensal:</label>
+          <span>{{customerMonthlyIncome}}</span>
+        </div>
+        <div class="info-item">
+          <label>Categoria de Risco:</label>
+          <span>{{customerRiskCategory}}</span>
+        </div>
+        <div class="info-item">
+          <label>Taxa de Juros Personalizada:</label>
+          <span>{{customerInterestRate}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Summary -->
+    <div class="financial-summary">
+      <h3>RESUMO FINANCEIRO DA OPERAÇÃO</h3>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <label>Valor Solicitado</label>
+          <div class="value">{{requestedAmount}}</div>
+        </div>
+        <div class="summary-item">
+          <label>Parcela Mensal</label>
+          <div class="value">{{installmentValue}}</div>
+        </div>
+        <div class="summary-item">
+          <label>Número de Parcelas</label>
+          <div class="value">{{installments}}x</div>
+        </div>
+        <div class="summary-item">
+          <label>Taxa de Juros</label>
+          <div class="value">{{interestRate}}</div>
+        </div>
+        <div class="summary-item">
+          <label>Valor Total</label>
+          <div class="value">{{totalAmount}}</div>
+        </div>
+        <div class="summary-item">
+          <label>Total de Juros</label>
+          <div class="value">{{totalInterest}}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loan Details -->
+    <div class="section">
+      <h2 class="section-title">2. CARACTERÍSTICAS DO CRÉDITO</h2>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Sistema de Amortização:</label>
+          <span>Tabela Price (Sistema Francês)</span>
+        </div>
+        <div class="info-item">
+          <label>Modalidade:</label>
+          <span>Crédito Pessoal</span>
+        </div>
+        <div class="info-item">
+          <label>Prazo Total:</label>
+          <span>{{installments}} meses</span>
+        </div>
+        <div class="info-item">
+          <label>Taxa Mensal Equivalente:</label>
+          <span>{{monthlyRate}}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page Break for Schedule -->
+    <div class="page-break"></div>
+
+    <!-- Payment Schedule -->
+    <div class="section">
+      <h2 class="section-title">3. CRONOGRAMA DE PAGAMENTO</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nº</th>
+            <th>Vencimento</th>
+            <th>Amortização</th>
+            <th>Juros</th>
+            <th>Parcela Total</th>
+            <th>Saldo Devedor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{scheduleRows}}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Terms and Conditions -->
+    <div class="terms">
+      <h4>CLÁUSULAS E CONDIÇÕES GERAIS</h4>
+      <ul>
+        <li>O presente documento representa uma operação de crédito nos termos da Lei nº 10.931/2004.</li>
+        <li>O devedor se compromete a pagar as parcelas nas datas de vencimento especificadas no cronograma.</li>
+        <li>A taxa de juros é fixa durante todo o período do contrato, calculada pelo sistema Price.</li>
+        <li>Em caso de atraso, serão aplicados juros de mora de 1% ao mês e multa de 2%.</li>
+        <li>O não pagamento de 3 (três) parcelas consecutivas acarretará no vencimento antecipado de todas as parcelas.</li>
+        <li>O devedor poderá realizar a quitação antecipada com redução proporcional dos juros.</li>
+        <li>Este documento possui força executiva extrajudicial nos termos da legislação vigente.</li>
+      </ul>
+    </div>
+
+    <!-- Signatures -->
+    <div class="footer">
+      <div class="signature-section">
+        <div class="signature-box">
+          <div class="signature-line">
+            <strong>{{customerName}}</strong><br>
+            CPF: {{customerCpf}}<br>
+            <em>EMITENTE / DEVEDOR</em>
+          </div>
+        </div>
+        <div class="signature-box">
+          <div class="signature-line">
+            <strong>Instituição Financeira</strong><br>
+            Representante: {{creatorName}}<br>
+            <em>CREDOR</em>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 30px; font-size: 9pt; color: #888;">
+        <p>Documento gerado eletronicamente em {{generatedAt}}</p>
+        <p>CCB ID: {{simulationId}}</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

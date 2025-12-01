@@ -93,6 +93,7 @@ export class CustomerService {
           select: {
             id: true,
             requestedAmount: true,
+            interestRate: true,
             installments: true,
             status: true,
             createdAt: true,
