@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Res } from '@nestjs/common';
+import { Controller, Param, Post, Res } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
@@ -20,7 +20,7 @@ export class CcbController {
     private readonly ccbGeneratorService: CcbGeneratorService,
   ) {}
 
-  @Get(':id/ccb')
+  @Post(':id/ccb')
   @ApiOperation({
     summary: 'Generate CCB HTML document',
     description: 'Generates CCB document in HTML format',

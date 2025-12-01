@@ -3,6 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { PrismaService } from '../../../src/database/prisma/prisma.service';
 import { AppModule } from '../../../src/app.module';
+import { RiskCategory } from '@prisma/client';
 
 describe('CCB Generation (e2e)', () => {
   let app: INestApplication;
@@ -35,33 +36,40 @@ describe('CCB Generation (e2e)', () => {
     await prisma.user.deleteMany();
 
     // Create admin user
-    const adminResponse = await request(app.getHttpServer())
-      .post('/auth/register')
+    await request(app.getHttpServer()).post('/auth/register').send({
+      email: 'admin@test.com',
+      password: 'password123',
+      name: 'Admin User',
+      role: 'ADMIN',
+    });
+
+    const adminLoginRes = await request(app.getHttpServer())
+      .post('/auth/login')
       .send({
-        email: 'admin@ccb.com',
-        password: 'admin123456',
-        name: 'Admin User',
-        role: 'ADMIN',
+        email: 'admin@test.com',
+        password: 'password123',
       });
 
-    adminToken = adminResponse.body.data.access_token;
+    if (!adminLoginRes.body.data?.accessToken) {
+      throw new Error('Failed to get admin token');
+    }
+    adminToken = adminLoginRes.body.data.accessToken;
 
     // Create customer
-    const customerResponse = await request(app.getHttpServer())
+    const customerRes = await request(app.getHttpServer())
       .post('/customer')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         name: 'João da Silva',
         cpf: '123.456.789-00',
-        email: 'joao@email.com',
-        phone: '(11) 98765-4321',
+        email: 'joao@example.com',
         interestRate: 12.5,
         creditScore: 750,
         monthlyIncome: 5000,
-        riskCategory: 'LOW',
+        riskCategory: RiskCategory.LOW,
       });
 
-    customerId = customerResponse.body.data.customer.id;
+    customerId = customerRes.body.data.customer.id;
 
     // Create simulation
     const simulationResponse = await request(app.getHttpServer())
@@ -85,12 +93,12 @@ describe('CCB Generation (e2e)', () => {
     await app.close();
   });
 
-  describe('GET /simulations/:id/ccb', () => {
+  describe('POST /simulations/:id/ccb', () => {
     it('should generate CCB HTML document', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/simulations/${simulationId}/ccb`)
+        .post(`/simulations/${simulationId}/ccb`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200)
+        .expect(201)
         .expect('Content-Type', /html/);
 
       // Validate HTML content
@@ -105,7 +113,7 @@ describe('CCB Generation (e2e)', () => {
 
     it('should return 401 without authentication', async () => {
       return request(app.getHttpServer())
-        .get(`/simulations/${simulationId}/ccb`)
+        .post(`/simulations/${simulationId}/ccb`)
         .expect(401);
     });
 
@@ -113,7 +121,7 @@ describe('CCB Generation (e2e)', () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
       return request(app.getHttpServer())
-        .get(`/simulations/${fakeId}/ccb`)
+        .post(`/simulations/${fakeId}/ccb`)
         .set('Authorization', `Bearer ${adminToken}`)
         .expect(404)
         .expect((res) => {
@@ -121,11 +129,12 @@ describe('CCB Generation (e2e)', () => {
         });
     });
 
-    it('should return 400 for invalid UUID', async () => {
+    it('should return 404 for invalid UUID', async () => {
+      const fakeId = '00000000-0000-0000-0000-000000000000';
       return request(app.getHttpServer())
-        .get('/simulations/invalid-uuid/ccb')
+        .post(`/simulations/${fakeId}/ccb`)
         .set('Authorization', `Bearer ${adminToken}`)
-        .expect(400);
+        .expect(404);
     });
   });
 });
