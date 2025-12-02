@@ -2,15 +2,17 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
 import { useCreateSimulation } from '@/hooks/useSimulations';
 import { useCustomers } from '@/hooks/useCustomers';
-import { formatPercent } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
+import { useFormSubmission } from '@/hooks/useFormSubmission';
+import { simulationSchema } from '@/lib/schemas';
+import { PageHeader } from '@/components/shared/PageHeader';
+import { LoadingState } from '@/components/shared/LoadingState';
+import { EmptyFormState } from '@/components/shared/EmptyFormState';
+import { CustomerSelectionCard } from '@/components/shared/CustomerSelectionCard';
+import { NumberFormField, FormActions } from '@/components/shared/form';
+import type * as z from 'zod';
 import {
   Card,
   CardContent,
@@ -18,16 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import {
   Select,
   SelectContent,
@@ -35,19 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-const simulationSchema = z.object({
-  customerId: z.string().min(1, 'Selecione um cliente'),
-  requestedAmount: z
-    .number()
-    .min(100, 'Valor mínimo de R$ 100')
-    .max(1000000, 'Valor máximo de R$ 1.000.000'),
-  installments: z
-    .number()
-    .int()
-    .min(1, 'Mínimo de 1 parcela')
-    .max(60, 'Máximo de 60 parcelas'),
-});
 
 type SimulationForm = z.infer<typeof simulationSchema>;
 
@@ -72,33 +52,21 @@ export default function NewSimulationPage() {
     (c) => c.id === selectedCustomerId
   );
 
-  const onSubmit = async (data: SimulationForm) => {
-    try {
-      const result = await createSimulation.mutateAsync(data);
-      toast.success('Simulação criada com sucesso!');
-      router.push(`/simulations/${result.id}`);
-    } catch (error: any) {
-      toast.error(
-        error.response?.data?.message || 'Erro ao criar simulação'
-      );
-    }
-  };
+  const onSubmit = useFormSubmission({
+    mutation: createSimulation,
+    successMessage: 'Simulação criada com sucesso!',
+    onSuccess: (result) => router.push(`/simulations/${result.id}`),
+  });
+
+  if (loadingCustomers) return <LoadingState message="Carregando clientes..." />;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Link href="/simulations">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Nova Simulação</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Preencha os dados da simulação de empréstimo
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Nova Simulação"
+        description="Preencha os dados da simulação de empréstimo"
+        backHref="/simulations"
+      />
 
       <Card>
         <CardHeader>
@@ -108,20 +76,12 @@ export default function NewSimulationPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {loadingCustomers ? (
-            <p className="text-gray-500">Carregando clientes...</p>
-          ) : !customersData?.customers || customersData.customers.length === 0 ? (
-            <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-              <p className="text-sm text-yellow-800">
-                Nenhum cliente cadastrado. É necessário cadastrar clientes antes
-                de criar simulações.
-              </p>
-              <Link href="/customers/new">
-                <Button className="mt-4" size="sm">
-                  Cadastrar Cliente
-                </Button>
-              </Link>
-            </div>
+          {!customersData?.customers || customersData.customers.length === 0 ? (
+            <EmptyFormState
+              message="Nenhum cliente cadastrado. É necessário cadastrar clientes antes de criar simulações."
+              actionLabel="Cadastrar Cliente"
+              actionHref="/customers/new"
+            />
           ) : (
             <Form {...form}>
               <form
@@ -157,83 +117,35 @@ export default function NewSimulationPage() {
                 />
 
                 {selectedCustomer && (
-                  <div className="rounded-lg border bg-blue-50 p-4">
-                    <p className="text-sm font-medium text-blue-900">
-                      Taxa de Juros do Cliente
-                    </p>
-                    <p className="mt-1 text-2xl font-bold text-blue-600">
-                      {formatPercent(selectedCustomer.interestRate)}
-                    </p>
-                    <p className="mt-1 text-xs text-blue-700">
-                      Esta taxa será aplicada automaticamente à simulação
-                    </p>
-                  </div>
+                  <CustomerSelectionCard interestRate={selectedCustomer.interestRate} />
                 )}
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  <FormField
+                  <NumberFormField
                     control={form.control}
                     name="requestedAmount"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Valor Solicitado (R$)</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            step="0.01"
-                            placeholder="10000.00"
-                            {...field}
-                            value={field.value || ''}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Valor do empréstimo solicitado
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Valor Solicitado (R$)"
+                    placeholder="10000.00"
+                    step="0.01"
+                    description="Valor do empréstimo solicitado"
                   />
 
-                  <FormField
+                  <NumberFormField
                     control={form.control}
                     name="installments"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Número de Parcelas</FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            placeholder="12"
-                            {...field}
-                            value={field.value || ''}
-                            onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Quantidade de parcelas (1-60)
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                    label="Número de Parcelas"
+                    placeholder="12"
+                    description="Quantidade de parcelas (1-60)"
                   />
                 </div>
 
-                <div className="flex justify-end gap-4">
-                  <Link href="/simulations">
-                    <Button variant="outline" type="button">
-                      Cancelar
-                    </Button>
-                  </Link>
-                  <Button
-                    type="submit"
-                    disabled={createSimulation.isPending || !selectedCustomer}
-                  >
-                    {createSimulation.isPending
-                      ? 'Criando...'
-                      : 'Criar Simulação'}
-                  </Button>
-                </div>
+                <FormActions
+                  cancelHref="/simulations"
+                  submitLabel="Criar Simulação"
+                  loadingLabel="Criando..."
+                  isPending={createSimulation.isPending}
+                  disabled={!selectedCustomer}
+                />
               </form>
             </Form>
           )}
