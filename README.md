@@ -6,7 +6,7 @@ Fullstack CCB (Credit Certificate) system with authentication, customer manageme
 ## Tech Stack
 - **Backend**: NestJS + TypeScript + Prisma + PostgreSQL (Docker container)
 - **Frontend**: Next.js 16 (App Router) + TypeScript + Tailwind CSS
-- **Testing**: Jest + React Testing Library + Playwright
+- **Testing**: Jest + React Testing Library
 - **Auth**: JWT + bcrypt
 - **Database**: PostgreSQL (via Docker)
 
