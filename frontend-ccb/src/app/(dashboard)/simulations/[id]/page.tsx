@@ -19,7 +19,7 @@ export default function SimulationDetailsPage({
 }) {
   const { id } = use(params);
   const { data: simulation, isLoading, error } = useSimulation(id);
-  const { data: user } = useUser();
+  const { data: data } = useUser();
 
   const { handleDownloadCCB, handleStatusChange, isDownloading, isUpdating } = useSimulationActions({
     simulationId: id,
@@ -36,7 +36,8 @@ export default function SimulationDetailsPage({
     );
   }
 
-  const canUpdateStatus = user?.role === UserRole.ADMIN || user?.role === UserRole.OPERATOR;
+  const canUpdateStatus = data?.user?.role === UserRole.ADMIN || data?.user?.role === UserRole.OPERATOR;
+
 
   return (
     <div className="space-y-6">

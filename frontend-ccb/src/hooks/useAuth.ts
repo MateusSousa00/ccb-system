@@ -7,7 +7,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   AuthResponse,
-  User,
+  UserResponse,
 } from '@/types';
 
 export function useLogin() {
@@ -47,8 +47,8 @@ export function useRegister() {
 export function useUser() {
   return useQuery({
     queryKey: ['user'],
-    queryFn: async (): Promise<User> => {
-      const response = await api.get<ApiResponse<User>>('/auth/me');
+    queryFn: async (): Promise<UserResponse> => {
+      const response = await api.get<ApiResponse<UserResponse>>('/auth/me');
       return response.data.data;
     },
     enabled: !!Cookies.get('auth_token'),

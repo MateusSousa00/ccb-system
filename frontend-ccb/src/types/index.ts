@@ -17,6 +17,10 @@ export interface User {
   createdAt: string;
 }
 
+export interface UserResponse {
+  user: User
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
