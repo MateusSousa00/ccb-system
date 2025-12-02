@@ -21,7 +21,60 @@ Fullstack CCB (Credit Certificate) system with authentication, customer manageme
 
 ## Project Structure:
 ```
-in coming
+.
+├── backend-ccb
+│   ├── prisma
+│   ├── src
+│   │   ├── common
+│   │   │   ├── decorators
+│   │   │   │   ├── public
+│   │   │   │   ├── roles
+│   │   │   │   └── user
+│   │   │   ├── dto
+│   │   │   ├── filters
+│   │   │   ├── guards
+│   │   │   │   ├── jwt
+│   │   │   │   └── roles
+│   │   │   └── interceptors
+│   │   ├── database
+│   │   │   └── prisma
+│   │   └── modules
+│   │       ├── auth
+│   │       │   ├── controllers
+│   │       │   ├── dto
+│   │       │   ├── interfaces
+│   │       │   ├── services
+│   │       │   └── strategies
+│   │       ├── customer
+│   │       │   ├── controllers
+│   │       │   ├── dto
+│   │       │   ├── entities
+│   │       │   └── services
+│   │       └── simulations
+│   │           ├── controllers
+│   │           ├── dto
+│   │           ├── services
+│   │           └── templates
+│   └── test
+│       └── modules
+│           ├── auth
+│           ├── customer
+│           └── simulations
+└── frontend-ccb
+    ├── public
+    └── src
+        ├── app
+        │   ├── (auth)
+        │   │   ├── login
+        │   │   └── signup
+        │   └── (dashboard)
+        │       ├── customers
+        │       └── simulations
+        ├── components
+        │   └── ui
+        ├── hooks
+        ├── lib
+        └── types
 ```
 
 ## 🚀 Quick Start
@@ -42,7 +95,7 @@ cd backend-ccb
 npm install                    # Install all dependencies from package.json
 npx prisma migrate dev         # Run database migrations
 npx prisma generate            # Generate Prisma Client
-npm run start:dev              # Start backend (http://localhost:3001)
+npm run start:dev              # Start backend (http://localhost:8080)
 
 # 3. Setup Frontend (in a new terminal)
 cd frontend-ccb

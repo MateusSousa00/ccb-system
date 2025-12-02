@@ -43,9 +43,18 @@ export class AuthService {
       },
     });
 
+    // Generate JWT token
+    const payload = { sub: user.id, email: user.email, role: user.role };
+    const accessToken = await this.jwtService.signAsync(payload);
+
     return {
-      message: 'User registered successfully',
-      user,
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      },
     };
   }
 

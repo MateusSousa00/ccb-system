@@ -44,9 +44,12 @@ describe('Auth (e2e)', () => {
         .expect(201)
         .expect((res) => {
           expect(res.body.success).toBe(true);
+          expect(res.body.data).toHaveProperty('accessToken');
           expect(res.body.data).toHaveProperty('user');
           expect(res.body.data.user.email).toBe('test@example.com');
           expect(res.body.data.user).not.toHaveProperty('password');
+          expect(typeof res.body.data.accessToken).toBe('string');
+          expect(res.body.data.accessToken.length).toBeGreaterThan(0);
         });
     });
 
@@ -57,10 +60,8 @@ describe('Auth (e2e)', () => {
         name: 'Test User',
       };
 
-      // Primeiro registro
       await request(app.getHttpServer()).post('/auth/register').send(userData);
 
-      // Segundo registro (deve falhar)
       return request(app.getHttpServer())
         .post('/auth/register')
         .send(userData)
@@ -92,11 +93,32 @@ describe('Auth (e2e)', () => {
         })
         .expect(400);
     });
+
+    it('should allow immediate authentication with registration token', async () => {
+      const registerRes = await request(app.getHttpServer())
+        .post('/auth/register')
+        .send({
+          email: 'immediate@example.com',
+          password: 'password123',
+          name: 'Immediate User',
+        })
+        .expect(201);
+
+      const accessToken = registerRes.body.data.accessToken;
+
+      return request(app.getHttpServer())
+        .get('/auth/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200)
+        .expect((res) => {
+          expect(res.body.success).toBe(true);
+          expect(res.body.data.user.email).toBe('immediate@example.com');
+        });
+    });
   });
 
   describe('/auth/login (POST)', () => {
     beforeEach(async () => {
-      // Criar usuário antes dos testes de login
       await request(app.getHttpServer()).post('/auth/register').send({
         email: 'login@example.com',
         password: 'password123',
@@ -150,7 +172,6 @@ describe('Auth (e2e)', () => {
     let accessToken: string;
 
     beforeEach(async () => {
-      // Registrar e fazer login
       await request(app.getHttpServer()).post('/auth/register').send({
         email: 'me@example.com',
         password: 'password123',

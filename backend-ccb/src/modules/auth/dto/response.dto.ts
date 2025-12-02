@@ -57,10 +57,11 @@ export class LoginResponseDto {
 
 export class RegisterResponseDto {
   @ApiProperty({
-    description: 'Success message',
-    example: 'User registered successfully',
+    description: 'JWT access token for authentication',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
   })
-  message: string;
+  accessToken: string;
+
   @ApiProperty({
     description: 'Created user information',
     type: UserResponseDto,

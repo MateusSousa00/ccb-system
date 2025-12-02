@@ -66,11 +66,14 @@ describe('AuthService', () => {
         role: 'OPERATOR',
         createdAt: new Date(),
       });
+      mockJwtService.signAsync.mockResolvedValue('jwt-token');
 
       const result = await service.register(registerDto);
 
-      expect(result).toHaveProperty('message', 'User registered successfully');
+      expect(result).toHaveProperty('accessToken', 'jwt-token');
       expect(result).toHaveProperty('user');
+      expect(result.user).toHaveProperty('id', '123');
+      expect(result.user).toHaveProperty('email', registerDto.email);
       expect(mockPrismaService.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -80,6 +83,11 @@ describe('AuthService', () => {
           }),
         }),
       );
+      expect(mockJwtService.signAsync).toHaveBeenCalledWith({
+        sub: '123',
+        email: registerDto.email,
+        role: 'OPERATOR',
+      });
     });
 
     it('should throw ConflictException if email already exists', async () => {
@@ -106,6 +114,7 @@ describe('AuthService', () => {
         role: 'OPERATOR',
         createdAt: new Date(),
       });
+      mockJwtService.signAsync.mockResolvedValue('jwt-token');
 
       const bcryptHashSpy = jest.spyOn(bcrypt, 'hash');
 
