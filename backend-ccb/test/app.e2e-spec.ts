@@ -7,7 +7,7 @@ import { setupApp } from './setup-app';
 describe('AppController (e2e)', () => {
   let app: INestApplication;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
@@ -26,7 +26,7 @@ describe('AppController (e2e)', () => {
       .get('/')
       .expect(200)
       .expect((res) => {
-        expect(res.body.success).toBe(true); // ← Agora tem o wrapper
+        expect(res.body.success).toBe(true);
         expect(res.body.data).toBe('Hello World!');
       });
   });

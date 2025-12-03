@@ -119,6 +119,9 @@ npm install                    # Instalar dependências
 npm run dev                    # Iniciar frontend (http://localhost:3000)
 ```
 
+## Documentação:
+> Acesse em http://localhost:8080/api-docs
+
 ## Requisitos:
 
 ### Obrigatórios
@@ -258,6 +261,8 @@ cp .env.example .env.local     # Create .env archive
 npm install                    # Install all dependencies from package.json
 npm run dev                    # Start frontend (http://localhost:3000)
 ```
+## Documentation:
+> Access in http://localhost:8080/api-docs
 
 ## Requirements (From Technical Challenge)
 

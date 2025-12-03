@@ -4,6 +4,7 @@ import { RiskCategory } from '@prisma/client';
 import * as request from 'supertest';
 import { AppModule } from '../../../src/app.module';
 import { PrismaService } from '../../../src/database/prisma/prisma.service';
+import { setupApp, cleanupDatabase, createAndLoginUser } from '../../setup-app';
 
 describe('Customer (e2e)', () => {
   let app: INestApplication;
@@ -17,48 +18,28 @@ describe('Customer (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    setupApp(app);
+
     prisma = app.get<PrismaService>(PrismaService);
+
+    await cleanupDatabase(prisma);
     await app.init();
 
-    await prisma.user.deleteMany();
-    await prisma.customer.deleteMany();
+    adminToken = await createAndLoginUser(
+      app,
+      'admin@test.com',
+      'password123',
+      'Admin User',
+      'ADMIN',
+    );
 
-    // ADMIN
-    await request(app.getHttpServer()).post('/auth/register').send({
-      email: 'admin@test.com',
-      password: 'password123',
-      name: 'Admin User',
-      role: 'ADMIN',
-    });
-
-    const adminLoginRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'admin@test.com',
-        password: 'password123',
-      });
-
-    if (!adminLoginRes.body.data?.accessToken) {
-      throw new Error('Failed to get admin token');
-    }
-    adminToken = adminLoginRes.body.data.accessToken;
-
-    // OPERATOR
-    await request(app.getHttpServer()).post('/auth/register').send({
-      email: 'operator@test.com',
-      password: 'password123',
-      name: 'Operator User',
-      role: 'OPERATOR',
-    });
-
-    const operatorLoginRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'operator@test.com',
-        password: 'password123',
-      });
-
-    operatorToken = operatorLoginRes.body.data.accessToken;
+    operatorToken = await createAndLoginUser(
+      app,
+      'operator@test.com',
+      'password123',
+      'Operator User',
+      'OPERATOR',
+    );
   });
 
   afterAll(async () => {

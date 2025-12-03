@@ -77,14 +77,16 @@ export function StatusChangeConfirmation({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{config.title}</AlertDialogTitle>
-          <AlertDialogDescription className="space-y-2">
-            <div className="text-sm">
-              <span className="font-medium">Status atual:</span> {statusLabels[currentStatus]}
+          <AlertDialogDescription asChild>
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-medium">Status atual:</span> {statusLabels[currentStatus]}
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Novo status:</span> {statusLabels[newStatus]}
+              </div>
+              <div className="mt-2">{config.message}</div>
             </div>
-            <div className="text-sm">
-              <span className="font-medium">Novo status:</span> {statusLabels[newStatus]}
-            </div>
-            <p className="mt-2">{config.message}</p>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

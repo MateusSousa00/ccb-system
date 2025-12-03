@@ -4,6 +4,7 @@ import { RiskCategory, SimulationStatus } from '@prisma/client';
 import * as request from 'supertest';
 import { AppModule } from '../../../src/app.module';
 import { PrismaService } from '../../../src/database/prisma/prisma.service';
+import { setupApp, cleanupDatabase, createAndLoginUser } from '../../setup-app';
 
 describe('Simulations (e2e)', () => {
   let app: INestApplication;
@@ -18,54 +19,28 @@ describe('Simulations (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    setupApp(app);
+
     prisma = app.get<PrismaService>(PrismaService);
 
+    await cleanupDatabase(prisma);
     await app.init();
 
-    await prisma.installmentSchedule.deleteMany();
-    await prisma.simulation.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.user.deleteMany();
+    adminToken = await createAndLoginUser(
+      app,
+      'admin@test.com',
+      'password123',
+      'Admin User',
+      'ADMIN',
+    );
 
-    // Create Admin
-    await request(app.getHttpServer()).post('/auth/register').send({
-      email: 'admin@test.com',
-      password: 'password123',
-      name: 'Admin User',
-      role: 'ADMIN',
-    });
-
-    const adminLoginRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'admin@test.com',
-        password: 'password123',
-      });
-
-    if (!adminLoginRes.body.data?.accessToken) {
-      throw new Error('Failed to get admin token');
-    }
-    adminToken = adminLoginRes.body.data.accessToken;
-
-    // Create OPERATOR
-    await request(app.getHttpServer()).post('/auth/register').send({
-      email: 'operator@test.com',
-      password: 'password123',
-      name: 'Operator User',
-      role: 'OPERATOR',
-    });
-
-    const operatorLoginRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'operator@test.com',
-        password: 'password123',
-      });
-
-    if (!operatorLoginRes.body.data?.accessToken) {
-      throw new Error('Failed to get operator token');
-    }
-    operatorToken = operatorLoginRes.body.data.accessToken;
+    operatorToken = await createAndLoginUser(
+      app,
+      'operator@test.com',
+      'password123',
+      'Operator User',
+      'OPERATOR',
+    );
 
     // Create Customer
     const customerRes = await request(app.getHttpServer())

@@ -1,8 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { PrismaService } from '../../../src/database/prisma/prisma.service';
 import { AppModule } from '../../../src/app.module';
+import { setupApp, cleanupDatabase, createAndLoginUser } from '../../setup-app';
 import { RiskCategory } from '@prisma/client';
 
 describe('CCB Generation (e2e)', () => {
@@ -18,42 +19,20 @@ describe('CCB Generation (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: true,
-        transform: true,
-      }),
-    );
+    setupApp(app);
 
     prisma = moduleFixture.get<PrismaService>(PrismaService);
 
+    await cleanupDatabase(prisma);
     await app.init();
 
-    await prisma.installmentSchedule.deleteMany();
-    await prisma.simulation.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.user.deleteMany();
-
-    // Create admin user
-    await request(app.getHttpServer()).post('/auth/register').send({
-      email: 'admin@test.com',
-      password: 'password123',
-      name: 'Admin User',
-      role: 'ADMIN',
-    });
-
-    const adminLoginRes = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'admin@test.com',
-        password: 'password123',
-      });
-
-    if (!adminLoginRes.body.data?.accessToken) {
-      throw new Error('Failed to get admin token');
-    }
-    adminToken = adminLoginRes.body.data.accessToken;
+    adminToken = await createAndLoginUser(
+      app,
+      'admin@test.com',
+      'password123',
+      'Admin User',
+      'ADMIN',
+    );
 
     // Create customer
     const customerRes = await request(app.getHttpServer())
@@ -85,10 +64,7 @@ describe('CCB Generation (e2e)', () => {
   });
 
   afterAll(async () => {
-    await prisma.installmentSchedule.deleteMany();
-    await prisma.simulation.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.user.deleteMany();
+    await cleanupDatabase(prisma);
     await prisma.$disconnect();
     await app.close();
   });
