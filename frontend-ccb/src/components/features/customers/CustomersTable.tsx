@@ -1,3 +1,6 @@
+'use client';
+
+import Link from 'next/link';
 import {
   Table,
   TableBody,
@@ -7,15 +10,18 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Eye, Pencil, Trash2 } from 'lucide-react';
 import { formatCPF, formatCurrency, formatPercent } from '@/lib/utils';
 import { getRiskBadgeVariant, getRiskLabel } from '@/lib/badge-mappers';
 import type { Customer } from '@/types';
 
 interface CustomersTableProps {
   customers: Customer[];
+  onDelete?: (id: string, name: string) => void;
 }
 
-export function CustomersTable({ customers }: CustomersTableProps) {
+export function CustomersTable({ customers, onDelete }: CustomersTableProps) {
   return (
     <div className="rounded-lg border bg-white">
       <Table>
@@ -28,6 +34,7 @@ export function CustomersTable({ customers }: CustomersTableProps) {
             <TableHead>Score</TableHead>
             <TableHead>Renda Mensal</TableHead>
             <TableHead>Risco</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -43,6 +50,27 @@ export function CustomersTable({ customers }: CustomersTableProps) {
                 <Badge variant={getRiskBadgeVariant(customer.riskCategory)}>
                   {getRiskLabel(customer.riskCategory)}
                 </Badge>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href={`/customers/${customer.id}`}>
+                      <Eye className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <Link href={`/customers/${customer.id}/edit`}>
+                      <Pencil className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onDelete?.(customer.id, customer.name)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

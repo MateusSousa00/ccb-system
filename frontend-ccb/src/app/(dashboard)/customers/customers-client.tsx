@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
-import { useCustomers } from '@/hooks/useCustomers';
+import { toast } from 'sonner';
+import { useCustomers, useDeleteCustomer } from '@/hooks/useCustomers';
 import { usePagination } from '@/hooks/usePagination';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -10,10 +12,29 @@ import { LoadingState } from '@/components/shared/LoadingState';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { PaginationControls } from '@/components/shared/PaginationControls';
 import { CustomersTable } from '@/components/features/customers/CustomersTable';
+import { DeleteCustomerConfirmation } from '@/components/features/customers/DeleteCustomerConfirmation';
 
 export function CustomersClient() {
   const { page, limit, nextPage, prevPage } = usePagination();
   const { data, isLoading, error } = useCustomers({ page, limit });
+  const [deleteDialog, setDeleteDialog] = useState<{ id: string; name: string } | null>(null);
+  const deleteCustomer = useDeleteCustomer();
+
+  const handleDeleteClick = (id: string, name: string) => {
+    setDeleteDialog({ id, name });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog) return;
+
+    try {
+      await deleteCustomer.mutateAsync(deleteDialog.id);
+      toast.success('Cliente deletado com sucesso!');
+      setDeleteDialog(null);
+    } catch (error) {
+      toast.error('Erro ao deletar cliente');
+    }
+  };
 
   if (error) {
     return (
@@ -48,7 +69,7 @@ export function CustomersClient() {
         />
       ) : (
         <>
-          <CustomersTable customers={data.customers} />
+          <CustomersTable customers={data.customers} onDelete={handleDeleteClick} />
 
           {data && data.totalPages > 1 && (
             <PaginationControls
@@ -60,6 +81,14 @@ export function CustomersClient() {
           )}
         </>
       )}
+
+      <DeleteCustomerConfirmation
+        open={!!deleteDialog}
+        onOpenChange={(open) => !open && setDeleteDialog(null)}
+        customerName={deleteDialog?.name || ''}
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteCustomer.isPending}
+      />
     </div>
   );
 }

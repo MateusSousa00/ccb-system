@@ -139,8 +139,8 @@
   }
 
   .input-base {
-    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm;
-    @apply file:border-0 file:bg-transparent file:text-sm file:font-medium;
+    @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm cursor-text;
+    @apply file:border-0 file:bg-transparent file:text-sm file:font-medium file:cursor-pointer;
     @apply placeholder:text-muted-foreground;
   }
 
